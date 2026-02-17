@@ -73,6 +73,11 @@ function init() {
 
     fullscreenBtn.addEventListener('click', toggleFullscreen);
 
+    // Test Dua Button
+    document.getElementById('test-dua-btn').addEventListener('click', () => {
+        duaOverlay.classList.toggle('hidden');
+    });
+
     // Audio Toggle
     updateAudioBtn();
     audioBtn.addEventListener('click', () => {
