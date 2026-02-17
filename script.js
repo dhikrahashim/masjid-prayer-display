@@ -1,6 +1,6 @@
 
 // Constants
-const API_BASE = 'http://api.aladhan.com/v1/timingsByCity';
+const API_BASE = 'https://api.aladhan.com/v1/timingsByCity';
 const DEFAULT_METHOD = 2; // ISNA (Islamic Society of North America) - widely accepted
 
 // State
