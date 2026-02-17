@@ -315,7 +315,10 @@ function updateNextPrayer(now) {
 
     // Iterate through today's prayers
     for (const name of displayList) {
-        const timeStr = prayerTimes[name]; // "HH:MM"
+        let timeStr = prayerTimes[name]; // "HH:MM"
+        // Apply Manual Adjustment
+        timeStr = applyAdjustment(timeStr, timeAdjustments[name]);
+
         const [h, m] = timeStr.split(':');
 
         const pDate = new window.Date(now);
@@ -350,8 +353,13 @@ function updateNextPrayer(now) {
 
     // Check Previous Prayer (to see if we are waiting for its Iqamah)
     // iterate displayList again to find which window we are in
+    // Check Previous Prayer (to see if we are waiting for its Iqamah OR in Dua time)
+    // iterate displayList again to find which window we are in
     for (const name of displayList) {
-        const azanStr = prayerTimes[name];
+        let azanStr = prayerTimes[name];
+        // Apply Manual Adjustment
+        azanStr = applyAdjustment(azanStr, timeAdjustments[name]);
+
         const [ah, am] = azanStr.split(':');
         const aDate = new window.Date(now);
         aDate.setHours(parseInt(ah), parseInt(am), 0, 0);
