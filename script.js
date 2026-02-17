@@ -1,6 +1,6 @@
 // Constants
 const API_BASE = 'https://api.aladhan.com/v1/timingsByCity';
-const DEFAULT_METHOD = 2; // ISNA (Islamic Society of North America) - widely accepted
+const DEFAULT_METHOD = 1; // University of Islamic Sciences, Karachi (Common for India)
 const DEFAULT_IQAMAH = {
     Fajr: "+20",
     Dhuhr: "+15",
@@ -20,8 +20,8 @@ const DEFAULT_ADJUSTMENTS = {
 // State
 let prayerTimes = null;
 let locationData = {
-    city: localStorage.getItem('masjid_city') || '',
-    country: localStorage.getItem('masjid_country') || ''
+    city: localStorage.getItem('masjid_city') || 'Kalpetta',
+    country: localStorage.getItem('masjid_country') || 'India'
 };
 let calcMethod = localStorage.getItem('masjid_calc_method') || DEFAULT_METHOD;
 let asrMethod = localStorage.getItem('masjid_asr_method') || 0; // 0=Standard, 1=Hanafi
@@ -89,7 +89,7 @@ function updateClock() {
     const now = new window.Date(); // Use window.Date to avoid conflict if Date is shadowed
 
     // Time
-    const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+    const timeString = now.toLocaleTimeString('en-US', { hour12: true });
     clockEl.textContent = timeString;
 
     // Date
