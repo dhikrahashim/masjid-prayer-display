@@ -9,7 +9,7 @@ A simple, beautiful prayer time display for Google TV / Chromecast / Browser.
 1. Open Terminal.
 2. Navigate to this folder:
    ```bash
-   cd /home/USER/hasabd/projects/upgrade/masjid_prayer_display
+   cd masjid_prayer_display
    ```
 3. Start a simple web server:
    ```bash
