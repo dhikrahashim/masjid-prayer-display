@@ -18,6 +18,7 @@
         <header>
             <div id="clock">00:00:00</div>
             <div id="date">Loading Date...</div>
+            <div id="hijri-date">Loading Hijri...</div>
             <div id="location-display" class="location-text">Loading Location...</div>
         </header>
 
@@ -35,29 +36,53 @@
 
             <!-- Next Prayer Logic -->
             <div class="next-prayer-container">
-                <h2>Next Prayer</h2>
+                <h2>Next Prayer / Iqamah</h2>
                 <div id="next-prayer-name">--</div>
                 <div id="countdown">--:--:--</div>
+                <div id="next-iqamah_time" style="font-size: 1.5rem; margin-top: 10px; color: var(--text-secondary);">
+                </div>
             </div>
         </main>
+
+        <!-- Ticker -->
+        <div class="ticker-wrap">
+            <div class="ticker" id="ticker-content">
+                Welcome to the Masjid. Please silence your mobile phones. | Fasting on days of White (13, 14, 15) is
+                specific to the Hijri calendar.
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="ticker-wrap">
+            <div class="ticker" id="ticker-content">
+                Welcome to the Masjid. Please silence your mobile phones. | Fasting on days of White (13, 14, 15) is
+                specific to the Hijri calendar.
+            </div>
+        </div>
 
         <!-- Footer / Settings -->
         <footer>
             <button id="settings-btn" aria-label="Settings">⚙️ Settings</button>
             <button id="audio-btn" aria-label="Toggle Azan">🔔 Azan Off</button>
+            <button id="fullscreen-btn" aria-label="Fullscreen">⛶ Fullscreen</button>
         </footer>
     </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>Setup Location & Iqamah</h2>
+            <h2>Setup Location & Configuration</h2>
             <form id="settings-form">
                 <div class="form-group">
                     <label>Location</label>
                     <input type="text" id="city" name="city" placeholder="City (e.g. Mecca)" required>
                     <input type="text" id="country" name="country" placeholder="Country (e.g. Saudi Arabia)" required
                         style="margin-top: 5px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Ticker Message</label>
+                    <input type="text" id="ticker-text" placeholder="Announcements...">
                 </div>
 
                 <div class="form-group">

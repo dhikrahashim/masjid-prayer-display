@@ -16,9 +16,11 @@ const DEFAULT_ADJUSTMENTS = {
     Maghrib: 0,
     Isha: 0
 };
+const DEFAULT_TICKER = "Welcome to the Masjid. Please silence your mobile phones.";
 
 // State
 let prayerTimes = null;
+let hijriDate = "";
 let locationData = {
     city: localStorage.getItem('masjid_city') || 'Kalpetta',
     country: localStorage.getItem('masjid_country') || 'India'
@@ -27,27 +29,33 @@ let calcMethod = localStorage.getItem('masjid_calc_method') || DEFAULT_METHOD;
 let asrMethod = localStorage.getItem('masjid_asr_method') || 0; // 0=Standard, 1=Hanafi
 let timeAdjustments = JSON.parse(localStorage.getItem('masjid_adjustments')) || DEFAULT_ADJUSTMENTS;
 let iqamahSettings = JSON.parse(localStorage.getItem('masjid_iqamah')) || DEFAULT_IQAMAH;
+let tickerText = localStorage.getItem('masjid_ticker') || DEFAULT_TICKER;
 
 let azanEnabled = localStorage.getItem('masjid_azan') === 'true';
 
 // DOM Elements
 const clockEl = document.getElementById('clock');
 const dateEl = document.getElementById('date');
+const hijriDateEl = document.getElementById('hijri-date');
 const locationDisplayEl = document.getElementById('location-display');
 const prayerListEl = document.getElementById('prayer-list');
 const nextNameEl = document.getElementById('next-prayer-name');
 const countdownEl = document.getElementById('countdown');
+const tickerContentEl = document.getElementById('ticker-content');
 const settingsModal = document.getElementById('settings-modal');
 const settingsForm = document.getElementById('settings-form');
 const cityInput = document.getElementById('city');
 const countryInput = document.getElementById('country');
+const tickerInput = document.getElementById('ticker-text');
 const audioBtn = document.getElementById('audio-btn');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
 const azanAudio = document.getElementById('azan-audio');
 
 // Initialization
 function init() {
     updateClock();
     setInterval(updateClock, 1000);
+    tickerContentEl.textContent = tickerText;
 
     // Initial load setup
     if (!locationData.city || !locationData.country) {
@@ -61,6 +69,8 @@ function init() {
     document.getElementById('close-modal').addEventListener('click', closeSettings);
     settingsForm.addEventListener('submit', handleSettingsSave);
 
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
     // Audio Toggle
     updateAudioBtn();
     audioBtn.addEventListener('click', () => {
@@ -69,6 +79,7 @@ function init() {
         updateAudioBtn();
     });
 }
+
 
 function updateAudioBtn() {
     if (azanEnabled) {
@@ -91,6 +102,11 @@ function updateClock() {
     // Time
     const timeString = now.toLocaleTimeString('en-US', { hour12: true });
     clockEl.textContent = timeString;
+
+    // Auto-refresh at midnight (00:00:01)
+    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 1) {
+        location.reload();
+    }
 
     // Date
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -126,6 +142,11 @@ async function fetchPrayerTimes() {
 
         if (data.code === 200) {
             prayerTimes = data.data.timings;
+            // Hijri Date
+            const hijri = data.data.date.hijri;
+            hijriDate = `${hijri.day} ${hijri.month.en} ${hijri.year}`;
+            hijriDateEl.textContent = hijriDate;
+
             renderPrayerTimes();
         } else {
             console.error('API Error:', data);
@@ -184,6 +205,21 @@ function renderPrayerTimes() {
         `;
 
         prayerListEl.appendChild(div);
+
+        // Insert Sunrise after Fajr
+        if (name === 'Fajr') {
+            const sunriseTime = prayerTimes['Sunrise'];
+            if (sunriseTime) {
+                const sDiv = document.createElement('div');
+                sDiv.className = 'prayer-item sunrise';
+                sDiv.innerHTML = `
+                    <span class="prayer-name">Sunrise</span>
+                    <span class="prayer-time">${formatTime12(sunriseTime)}</span>
+                    <span class="prayer-iqamah">Ishraq</span>
+                `;
+                prayerListEl.appendChild(sDiv);
+            }
+        }
     });
 }
 
@@ -275,11 +311,53 @@ function updateNextPrayer(now) {
         nextPrayerTimeDate.setHours(parseInt(h), parseInt(m), 0, 0);
     }
 
+    // --- Logic for Iqamah Countdown ---
+    // Check if we are currently "in" a prayer time (Between Azan and Iqamah)
+    let showingIqamah = false;
+    let targetDate = nextPrayerTimeDate; // Default target is Next Azan
+    let statusText = nextPrayer; // Default text
+
+    // Check Previous Prayer (to see if we are waiting for its Iqamah)
+    // iterate displayList again to find which window we are in
+    for (const name of displayList) {
+        const azanStr = prayerTimes[name];
+        const [ah, am] = azanStr.split(':');
+        const aDate = new window.Date(now);
+        aDate.setHours(parseInt(ah), parseInt(am), 0, 0);
+
+        // Get Iqamah Time
+        let iqamahStr = calculateIqamah(name, azanStr);
+        // If iqamahStr is offset e.g. "+15" (shouldn't happen as calculateIqamah returns time, but let's be safe), 
+        // calculateIqamah returns formatted time "HH:MM", wait, let's check `calculateIqamah` implementation.
+        // It returns "HH:MM" (24h format in string).
+
+        if (iqamahStr !== '--:--') {
+            const [ih, im] = iqamahStr.split(':');
+            const iDate = new window.Date(now);
+            iDate.setHours(parseInt(ih), parseInt(im), 0, 0);
+
+            // Special case for Jumuah/Friday
+            // If it's Friday and Dhuhr, we treat it as Jumuah
+            // But logic inside render handles name change. Here we use 'Dhuhr' key.
+
+            // If NOW is between Azan and Iqamah
+            if (now >= aDate && now < iDate) {
+                // We are waiting for Iqamah!
+                targetDate = iDate;
+                showingIqamah = true;
+                statusText = `${name} Iqamah`;
+                break;
+            }
+        }
+    }
+
     // Update UI Elements
-    nextNameEl.textContent = nextPrayer;
+    nextNameEl.textContent = statusText;
 
     // Countdown
-    const diff = nextPrayerTimeDate - now;
+    let diff = targetDate - now;
+    if (diff < 0) diff = 0;
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -287,26 +365,41 @@ function updateNextPrayer(now) {
     countdownEl.textContent =
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+    // Styles for Iqamah Countdown
+    if (showingIqamah) {
+        countdownEl.classList.remove('countdown-warning');
+        countdownEl.classList.remove('countdown-imminent');
+
+        // < 5 mins
+        if (diff < 5 * 60 * 1000) {
+            countdownEl.classList.add('countdown-warning');
+        }
+        // < 2 mins (Red alert)
+        if (diff < 2 * 60 * 1000) {
+            countdownEl.classList.remove('countdown-warning');
+            countdownEl.classList.add('countdown-imminent');
+        }
+
+    } else {
+        countdownEl.classList.remove('countdown-warning');
+        countdownEl.classList.remove('countdown-imminent');
+    }
+
     // Highlight active prayer in list
     document.querySelectorAll('.prayer-item').forEach(item => {
         item.classList.remove('active');
-        if (item.id === `prayer-${nextPrayer}`) {
-            item.classList.add('active'); // Actually, active usually means "current time period".
-            // For simple display, let's highlight the NEXT one as "Upcoming" or highlight the CURRENT one?
-            // User request usually: Highlight the *current* prayer period, or *next*?
-            // Let's highlight the *next* per my CSS class `.prayer-item.active`.
-            // Wait, usually "active" means "Now". Let's change logic:
-            // Highlight the one we are waiting for? Or the one we are in?
-            // "Next Prayer" box shows what we are waiting for.
-            // List usually highlights the *Next* one to catch attention for when to pray.
-            // I'll stick to Highlighting NEXT for now as it matches the "Countdown".
+        // Highlight the prayer related to the countdown
+        // If we are showing "Fajr Iqamah", highlight Fajr
+        // If we are showing "Fajr" (next), highlight Fajr? Or just leave it?
+        // Let's highlight the Next/Current prayer
+        const prayerNameInStatus = statusText.split(' ')[0]; // "Fajr" or "Fajr Iqamah" -> "Fajr"
+        if (item.id === `prayer-${prayerNameInStatus}`) {
+            item.classList.add('active');
         }
     });
 
-    // Check for Azan Trigger (e.g., within 2 seconds of start)
-    // Note: setInterval runs every 1s, so we might miss exact ms.
-    // Check if diff is very small (positive)
-    if (diff <= 1000 && diff > 0 && azanEnabled) {
+    // Check for Azan Trigger (only if we are targeting Azan, not Iqamah)
+    if (!showingIqamah && diff <= 1000 && diff > 0 && azanEnabled) {
         playAzan();
     }
 }
@@ -321,6 +414,7 @@ function playAzan() {
 function openSettings() {
     cityInput.value = locationData.city;
     countryInput.value = locationData.country;
+    tickerInput.value = tickerText;
 
     // Populate Calculation Settings
     document.getElementById('calc-method').value = calcMethod;
@@ -360,6 +454,11 @@ function handleSettingsSave(e) {
         localStorage.setItem('masjid_city', newCity);
         localStorage.setItem('masjid_country', newCountry);
 
+        // Save Ticker
+        tickerText = tickerInput.value.trim() || DEFAULT_TICKER;
+        localStorage.setItem('masjid_ticker', tickerText);
+        tickerContentEl.textContent = tickerText;
+
         // Save Calculation Settings
         calcMethod = document.getElementById('calc-method').value;
         asrMethod = document.getElementById('asr-method').value;
@@ -389,6 +488,16 @@ function handleSettingsSave(e) {
 
         closeSettings();
         fetchPrayerTimes(); // Re-fetch/Re-render
+    }
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
     }
 }
 
