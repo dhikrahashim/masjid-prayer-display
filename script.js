@@ -9,6 +9,13 @@ const DEFAULT_IQAMAH = {
     Isha: "+15",
     Jumuah: "12:30" // Default fixed time for Friday
 };
+const DEFAULT_ADJUSTMENTS = {
+    Fajr: 0,
+    Dhuhr: 0,
+    Asr: 0,
+    Maghrib: 0,
+    Isha: 0
+};
 
 // State
 let prayerTimes = null;
@@ -16,6 +23,9 @@ let locationData = {
     city: localStorage.getItem('masjid_city') || '',
     country: localStorage.getItem('masjid_country') || ''
 };
+let calcMethod = localStorage.getItem('masjid_calc_method') || DEFAULT_METHOD;
+let asrMethod = localStorage.getItem('masjid_asr_method') || 0; // 0=Standard, 1=Hanafi
+let timeAdjustments = JSON.parse(localStorage.getItem('masjid_adjustments')) || DEFAULT_ADJUSTMENTS;
 let iqamahSettings = JSON.parse(localStorage.getItem('masjid_iqamah')) || DEFAULT_IQAMAH;
 
 let azanEnabled = localStorage.getItem('masjid_azan') === 'true';
@@ -108,7 +118,7 @@ async function fetchPrayerTimes() {
 
         // Check if we need to refetch (e.g. data is from yesterday) implementation later
         // For now, simple fetch
-        const url = `${API_BASE}?city=${encodeURIComponent(locationData.city)}&country=${encodeURIComponent(locationData.country)}&method=${DEFAULT_METHOD}`;
+        const url = `${API_BASE}?city=${encodeURIComponent(locationData.city)}&country=${encodeURIComponent(locationData.country)}&method=${calcMethod}&school=${asrMethod}`;
         console.log("Fetching:", url);
 
         const response = await fetch(url);
@@ -148,7 +158,9 @@ function renderPrayerTimes() {
     const isFriday = today.getDay() === 5;
 
     prayersToDisplay.forEach(name => {
-        let azanTime = prayerTimes[name]; // "HH:MM"
+        let rawAzanTime = prayerTimes[name]; // "HH:MM"
+        let azanTime = applyAdjustment(rawAzanTime, timeAdjustments[name]);
+
         let displayName = name;
         let iqamahTime = calculateIqamah(name, azanTime);
 
@@ -208,6 +220,18 @@ function formatTime12(time24) {
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     return `${hours}:${minutes} <small>${ampm}</small>`;
+}
+
+function applyAdjustment(timeStr, adjustmentMinutes) {
+    if (!timeStr || !adjustmentMinutes || adjustmentMinutes == 0) return timeStr;
+
+    const [h, m] = timeStr.split(':').map(Number);
+    const date = new window.Date();
+    date.setHours(h, m + parseInt(adjustmentMinutes), 0, 0);
+
+    const newH = String(date.getHours()).padStart(2, '0');
+    const newM = String(date.getMinutes()).padStart(2, '0');
+    return `${newH}:${newM}`;
 }
 
 // Logic: Next Prayer & Countdown
@@ -298,6 +322,17 @@ function openSettings() {
     cityInput.value = locationData.city;
     countryInput.value = locationData.country;
 
+    // Populate Calculation Settings
+    document.getElementById('calc-method').value = calcMethod;
+    document.getElementById('asr-method').value = asrMethod;
+
+    // Populate Adjustments
+    document.getElementById('adj-Fajr').value = timeAdjustments.Fajr || 0;
+    document.getElementById('adj-Dhuhr').value = timeAdjustments.Dhuhr || 0;
+    document.getElementById('adj-Asr').value = timeAdjustments.Asr || 0;
+    document.getElementById('adj-Maghrib').value = timeAdjustments.Maghrib || 0;
+    document.getElementById('adj-Isha').value = timeAdjustments.Isha || 0;
+
     // Populate Iqamah inputs
     document.getElementById('iqamah-Fajr').value = iqamahSettings.Fajr || '';
     document.getElementById('iqamah-Dhuhr').value = iqamahSettings.Dhuhr || '';
@@ -324,6 +359,22 @@ function handleSettingsSave(e) {
         locationData.country = newCountry;
         localStorage.setItem('masjid_city', newCity);
         localStorage.setItem('masjid_country', newCountry);
+
+        // Save Calculation Settings
+        calcMethod = document.getElementById('calc-method').value;
+        asrMethod = document.getElementById('asr-method').value;
+        localStorage.setItem('masjid_calc_method', calcMethod);
+        localStorage.setItem('masjid_asr_method', asrMethod);
+
+        // Save Adjustments
+        timeAdjustments = {
+            Fajr: parseInt(document.getElementById('adj-Fajr').value) || 0,
+            Dhuhr: parseInt(document.getElementById('adj-Dhuhr').value) || 0,
+            Asr: parseInt(document.getElementById('adj-Asr').value) || 0,
+            Maghrib: parseInt(document.getElementById('adj-Maghrib').value) || 0,
+            Isha: parseInt(document.getElementById('adj-Isha').value) || 0
+        };
+        localStorage.setItem('masjid_adjustments', JSON.stringify(timeAdjustments));
 
         // Save Iqamah
         iqamahSettings = {

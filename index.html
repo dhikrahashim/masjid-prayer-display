@@ -61,6 +61,53 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Calculation Method</label>
+                    <select id="calc-method">
+                        <option value="2">ISNA (North America)</option>
+                        <option value="3">MWL (Muslim World League)</option>
+                        <option value="4">Makkah (Umm al-Qura)</option>
+                        <option value="1">Karachi (University of Islamic Sciences)</option>
+                        <option value="5">Egyptian General Authority</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Asr Juristic Method</label>
+                    <select id="asr-method">
+                        <option value="0">Standard (Shafi, Maliki, Hanbali)</option>
+                        <option value="1">Hanafi</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Manual Adjustments (Minutes)</label>
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Add/Subtract minutes from Azan time
+                    </p>
+                    <div class="iqamah-inputs">
+                        <div class="input-row">
+                            <label>Fajr:</label>
+                            <input type="number" id="adj-Fajr" placeholder="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Dhuhr:</label>
+                            <input type="number" id="adj-Dhuhr" placeholder="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Asr:</label>
+                            <input type="number" id="adj-Asr" placeholder="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Maghrib:</label>
+                            <input type="number" id="adj-Maghrib" placeholder="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Isha:</label>
+                            <input type="number" id="adj-Isha" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>Iqamah Offsets (Minutes)</label>
                     <p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Enter mintues (e.g. 15) or fixed
                         time (e.g. 13:30)</p>
