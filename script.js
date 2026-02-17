@@ -156,9 +156,38 @@ async function fetchPrayerTimes() {
         }
     } catch (error) {
         console.error('Fetch Error:', error);
-        locationDisplayEl.textContent = 'Network Error. Retrying...';
-        setTimeout(fetchPrayerTimes, 5000); // Retry after 5s
+
+        // If we are on file:// protocol or simple network error, load demo data for testing
+        if (window.location.protocol === 'file:' || error) {
+            locationDisplayEl.textContent = 'Offline Mode (Demo Data)';
+            locationDisplayEl.style.color = 'var(--accent-color)';
+            loadOfflineData();
+        } else {
+            locationDisplayEl.textContent = 'Network Error. Retrying...';
+            setTimeout(fetchPrayerTimes, 5000); // Retry after 5s
+        }
     }
+}
+
+function loadOfflineData() {
+    // Generate fake times relative to current time for testing ease
+    // Or just standard times. Let's use standard static times.
+    const now = new window.Date();
+
+    prayerTimes = {
+        Fajr: "05:30",
+        Sunrise: "06:45",
+        Dhuhr: "12:30",
+        Asr: "15:45",
+        Maghrib: "18:30",
+        Isha: "20:00"
+    };
+
+    // Hijri Date Mock
+    hijriDate = "15 Ramadan 1447";
+    hijriDateEl.textContent = hijriDate + " (Demo)";
+
+    renderPrayerTimes();
 }
 
 // Render List
