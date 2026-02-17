@@ -1,7 +1,14 @@
-
 // Constants
 const API_BASE = 'https://api.aladhan.com/v1/timingsByCity';
 const DEFAULT_METHOD = 2; // ISNA (Islamic Society of North America) - widely accepted
+const DEFAULT_IQAMAH = {
+    Fajr: "+20",
+    Dhuhr: "+15",
+    Asr: "+15",
+    Maghrib: "+10",
+    Isha: "+15",
+    Jumuah: "12:30" // Default fixed time for Friday
+};
 
 // State
 let prayerTimes = null;
@@ -9,6 +16,8 @@ let locationData = {
     city: localStorage.getItem('masjid_city') || '',
     country: localStorage.getItem('masjid_country') || ''
 };
+let iqamahSettings = JSON.parse(localStorage.getItem('masjid_iqamah')) || DEFAULT_IQAMAH;
+
 let azanEnabled = localStorage.getItem('masjid_azan') === 'true';
 
 // DOM Elements
@@ -88,8 +97,10 @@ async function fetchPrayerTimes() {
 
     locationDisplayEl.textContent = `${locationData.city}, ${locationData.country}`;
 
-    // Show loading state in list
-    prayerListEl.innerHTML = '<div class="prayer-item">Loading...</div>';
+    // Show loading state in list (preserve header)
+    // prayerListEl.innerHTML = '...'; // We need to be careful not to wipe header if we want to keep it stationary, but for now re-rendering whole list is fine or we Append.
+    // Actually, let's just keep the header in HTML and append items.
+    // For simplicity, I'll clear and re-add header + items in render.
 
     try {
         const today = new window.Date();
@@ -122,27 +133,68 @@ function renderPrayerTimes() {
     if (!prayerTimes) return;
 
     const prayersToDisplay = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    prayerListEl.innerHTML = '';
+
+    // Clear list but keep header? Or just re-create all.
+    prayerListEl.innerHTML = `
+        <div class="prayer-header">
+            <span>Prayer</span>
+            <span>Azan</span>
+            <span>Iqamah</span>
+        </div>
+    `;
+
+    // Check if it's Friday for Jumuah
+    const today = new window.Date();
+    const isFriday = today.getDay() === 5;
 
     prayersToDisplay.forEach(name => {
-        const time = prayerTimes[name];
+        let azanTime = prayerTimes[name]; // "HH:MM"
+        let displayName = name;
+        let iqamahTime = calculateIqamah(name, azanTime);
+
+        // Special handling for Friday Dhuhr -> Jumuah
+        if (isFriday && name === 'Dhuhr') {
+            displayName = 'Jumuah';
+            // Use Jumuah fixed time if set, else standard Dhuhr logic
+            if (iqamahSettings['Jumuah']) {
+                iqamahTime = calculateIqamah('Jumuah', azanTime); // Usually fixed
+            }
+        }
 
         const div = document.createElement('div');
         div.className = 'prayer-item';
         div.id = `prayer-${name}`;
 
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'prayer-name';
-        nameSpan.textContent = name;
+        div.innerHTML = `
+            <span class="prayer-name">${displayName}</span>
+            <span class="prayer-time">${formatTime12(azanTime)}</span>
+            <span class="prayer-iqamah">${formatTime12(iqamahTime)}</span>
+        `;
 
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'prayer-time';
-        timeSpan.textContent = formatTime12(time); // Convert to 12h format if desired
-
-        div.appendChild(nameSpan);
-        div.appendChild(timeSpan);
         prayerListEl.appendChild(div);
     });
+}
+
+function calculateIqamah(name, azanTime) {
+    const setting = iqamahSettings[name] || DEFAULT_IQAMAH[name] || "+10";
+
+    // Fixed time logic (e.g. "13:30")
+    if (!setting.startsWith('+')) {
+        return setting;
+    }
+
+    // Offset logic (e.g. "+15")
+    if (!azanTime) return '--:--';
+
+    const [h, m] = azanTime.split(':').map(Number);
+    const offset = parseInt(setting.replace('+', ''));
+
+    const date = new window.Date();
+    date.setHours(h, m + offset, 0, 0);
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
 function formatTime12(time24) {
@@ -155,7 +207,7 @@ function formatTime12(time24) {
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
-    return `${hours}:${minutes} ${ampm}`;
+    return `${hours}:${minutes} <small>${ampm}</small>`;
 }
 
 // Logic: Next Prayer & Countdown
@@ -215,20 +267,20 @@ function updateNextPrayer(now) {
     document.querySelectorAll('.prayer-item').forEach(item => {
         item.classList.remove('active');
         if (item.id === `prayer-${nextPrayer}`) {
-            item.classList.add('active'); // Actually, active usually means "current time period". 
+            item.classList.add('active'); // Actually, active usually means "current time period".
             // For simple display, let's highlight the NEXT one as "Upcoming" or highlight the CURRENT one?
-            // User request usually: Highlight the *current* prayer period, or *next*? 
-            // Let's highlight the *next* per my CSS class `.prayer-item.active`. 
-            // Wait, usually "active" means "Now". Let's change logic: 
+            // User request usually: Highlight the *current* prayer period, or *next*?
+            // Let's highlight the *next* per my CSS class `.prayer-item.active`.
+            // Wait, usually "active" means "Now". Let's change logic:
             // Highlight the one we are waiting for? Or the one we are in?
-            // "Next Prayer" box shows what we are waiting for. 
+            // "Next Prayer" box shows what we are waiting for.
             // List usually highlights the *Next* one to catch attention for when to pray.
             // I'll stick to Highlighting NEXT for now as it matches the "Countdown".
         }
     });
 
     // Check for Azan Trigger (e.g., within 2 seconds of start)
-    // Note: setInterval runs every 1s, so we might miss exact ms. 
+    // Note: setInterval runs every 1s, so we might miss exact ms.
     // Check if diff is very small (positive)
     if (diff <= 1000 && diff > 0 && azanEnabled) {
         playAzan();
@@ -245,6 +297,15 @@ function playAzan() {
 function openSettings() {
     cityInput.value = locationData.city;
     countryInput.value = locationData.country;
+
+    // Populate Iqamah inputs
+    document.getElementById('iqamah-Fajr').value = iqamahSettings.Fajr || '';
+    document.getElementById('iqamah-Dhuhr').value = iqamahSettings.Dhuhr || '';
+    document.getElementById('iqamah-Asr').value = iqamahSettings.Asr || '';
+    document.getElementById('iqamah-Maghrib').value = iqamahSettings.Maghrib || '';
+    document.getElementById('iqamah-Isha').value = iqamahSettings.Isha || '';
+    document.getElementById('iqamah-Jumuah').value = iqamahSettings.Jumuah || '';
+
     settingsModal.classList.remove('hidden');
 }
 
@@ -258,13 +319,25 @@ function handleSettingsSave(e) {
     const newCountry = countryInput.value.trim();
 
     if (newCity && newCountry) {
+        // Save Location
         locationData.city = newCity;
         locationData.country = newCountry;
         localStorage.setItem('masjid_city', newCity);
         localStorage.setItem('masjid_country', newCountry);
 
+        // Save Iqamah
+        iqamahSettings = {
+            Fajr: document.getElementById('iqamah-Fajr').value.trim() || DEFAULT_IQAMAH.Fajr,
+            Dhuhr: document.getElementById('iqamah-Dhuhr').value.trim() || DEFAULT_IQAMAH.Dhuhr,
+            Asr: document.getElementById('iqamah-Asr').value.trim() || DEFAULT_IQAMAH.Asr,
+            Maghrib: document.getElementById('iqamah-Maghrib').value.trim() || DEFAULT_IQAMAH.Maghrib,
+            Isha: document.getElementById('iqamah-Isha').value.trim() || DEFAULT_IQAMAH.Isha,
+            Jumuah: document.getElementById('iqamah-Jumuah').value.trim() || DEFAULT_IQAMAH.Jumuah
+        };
+        localStorage.setItem('masjid_iqamah', JSON.stringify(iqamahSettings));
+
         closeSettings();
-        fetchPrayerTimes();
+        fetchPrayerTimes(); // Re-fetch/Re-render
     }
 }
 

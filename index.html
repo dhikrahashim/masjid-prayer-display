@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
     <div class="container">
@@ -22,27 +24,13 @@
         <!-- Main Content: Prayer Times -->
         <main>
             <div class="prayer-times-list" id="prayer-list">
+                <!-- Header Row -->
+                <div class="prayer-header">
+                    <span>Prayer</span>
+                    <span>Azan</span>
+                    <span>Iqamah</span>
+                </div>
                 <!-- Prayer items will be injected here by JS -->
-                <div class="prayer-item">
-                    <span class="prayer-name">Fajr</span>
-                    <span class="prayer-time">--:--</span>
-                </div>
-                <div class="prayer-item active">
-                    <span class="prayer-name">Dhuhr</span>
-                    <span class="prayer-time">--:--</span>
-                </div>
-                <div class="prayer-item">
-                    <span class="prayer-name">Asr</span>
-                    <span class="prayer-time">--:--</span>
-                </div>
-                <div class="prayer-item">
-                    <span class="prayer-name">Maghrib</span>
-                    <span class="prayer-time">--:--</span>
-                </div>
-                <div class="prayer-item">
-                    <span class="prayer-name">Isha</span>
-                    <span class="prayer-time">--:--</span>
-                </div>
             </div>
 
             <!-- Next Prayer Logic -->
@@ -56,25 +44,55 @@
         <!-- Footer / Settings -->
         <footer>
             <button id="settings-btn" aria-label="Settings">⚙️ Settings</button>
-             <button id="audio-btn" aria-label="Toggle Azan">🔔 Azan Off</button>
+            <button id="audio-btn" aria-label="Toggle Azan">🔔 Azan Off</button>
         </footer>
     </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>Setup Location</h2>
-            <p>Please enter your city and country to get accurate prayer times.</p>
+            <h2>Setup Location & Iqamah</h2>
             <form id="settings-form">
                 <div class="form-group">
-                    <label for="city">City:</label>
-                    <input type="text" id="city" name="city" placeholder="e.g. Mecca" required>
+                    <label>Location</label>
+                    <input type="text" id="city" name="city" placeholder="City (e.g. Mecca)" required>
+                    <input type="text" id="country" name="country" placeholder="Country (e.g. Saudi Arabia)" required
+                        style="margin-top: 5px;">
                 </div>
+
                 <div class="form-group">
-                    <label for="country">Country:</label>
-                    <input type="text" id="country" name="country" placeholder="e.g. Saudi Arabia" required>
+                    <label>Iqamah Offsets (Minutes)</label>
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Enter mintues (e.g. 15) or fixed
+                        time (e.g. 13:30)</p>
+
+                    <div class="iqamah-inputs">
+                        <div class="input-row">
+                            <label>Fajr:</label>
+                            <input type="text" id="iqamah-Fajr" placeholder="+20 or 05:30">
+                        </div>
+                        <div class="input-row">
+                            <label>Dhuhr:</label>
+                            <input type="text" id="iqamah-Dhuhr" placeholder="+15 or 12:45">
+                        </div>
+                        <div class="input-row">
+                            <label>Asr:</label>
+                            <input type="text" id="iqamah-Asr" placeholder="+15 or 15:45">
+                        </div>
+                        <div class="input-row">
+                            <label>Maghrib:</label>
+                            <input type="text" id="iqamah-Maghrib" placeholder="+5 or 18:30">
+                        </div>
+                        <div class="input-row">
+                            <label>Isha:</label>
+                            <input type="text" id="iqamah-Isha" placeholder="+15 or 20:00">
+                        </div>
+                        <div class="input-row">
+                            <label>Jumuah:</label>
+                            <input type="text" id="iqamah-Jumuah" placeholder="12:30">
+                        </div>
+                    </div>
                 </div>
-                <!-- Method Selection could be added here later -->
+
                 <button type="submit">Save & Update</button>
                 <button type="button" id="close-modal">Cancel</button>
             </form>
@@ -86,4 +104,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
