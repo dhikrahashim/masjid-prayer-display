@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masjid Prayer Times</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header: Time and Date -->
+        <header>
+            <div id="clock">00:00:00</div>
+            <div id="date">Loading Date...</div>
+            <div id="location-display" class="location-text">Loading Location...</div>
+        </header>
+
+        <!-- Main Content: Prayer Times -->
+        <main>
+            <div class="prayer-times-list" id="prayer-list">
+                <!-- Prayer items will be injected here by JS -->
+                <div class="prayer-item">
+                    <span class="prayer-name">Fajr</span>
+                    <span class="prayer-time">--:--</span>
+                </div>
+                <div class="prayer-item active">
+                    <span class="prayer-name">Dhuhr</span>
+                    <span class="prayer-time">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Asr</span>
+                    <span class="prayer-time">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Maghrib</span>
+                    <span class="prayer-time">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Isha</span>
+                    <span class="prayer-time">--:--</span>
+                </div>
+            </div>
+
+            <!-- Next Prayer Logic -->
+            <div class="next-prayer-container">
+                <h2>Next Prayer</h2>
+                <div id="next-prayer-name">--</div>
+                <div id="countdown">--:--:--</div>
+            </div>
+        </main>
+
+        <!-- Footer / Settings -->
+        <footer>
+            <button id="settings-btn" aria-label="Settings">⚙️ Settings</button>
+             <button id="audio-btn" aria-label="Toggle Azan">🔔 Azan Off</button>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Setup Location</h2>
+            <p>Please enter your city and country to get accurate prayer times.</p>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" placeholder="e.g. Mecca" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <input type="text" id="country" name="country" placeholder="e.g. Saudi Arabia" required>
+                </div>
+                <!-- Method Selection could be added here later -->
+                <button type="submit">Save & Update</button>
+                <button type="button" id="close-modal">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio id="azan-audio" src="https://www.islamcan.com/audio/adhan/azan1.mp3" preload="none"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
