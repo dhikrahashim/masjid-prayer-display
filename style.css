@@ -1,0 +1,232 @@
+:root {
+    --bg-color: #000000;
+    --text-primary: #ffffff;
+    --text-secondary: #aaaaaa;
+    --accent-color: #FFD700; /* Gold */
+    --highlight-bg: #1a1a1a;
+    --active-bg: #2d2d2d;
+    --success-color: #4CAF50;
+    --font-family: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent scrolling on TV */
+}
+
+.container {
+    width: 95%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    justify-content: space-between;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#clock {
+    font-size: 6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1;
+}
+
+#date {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.location-text {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-weight: 300;
+}
+
+/* Main Content */
+main {
+    display: flex;
+    flex-wrap: wrap; /* responsive wrap */
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-grow: 1;
+}
+
+.prayer-times-list {
+    flex: 2;
+    background: var(--highlight-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.prayer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    background: transparent;
+    transition: background 0.3s;
+    font-size: 2.5rem;
+}
+
+.prayer-item.active {
+    background: var(--active-bg);
+    border: 2px solid var(--accent-color);
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.prayer-item.next {
+    border: 1px dashed var(--text-secondary);
+}
+
+/* Next Prayer Box */
+.next-prayer-container {
+    flex: 1;
+    background: var(--active-bg);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    min-width: 300px;
+}
+
+.next-prayer-container h2 {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+#next-prayer-name {
+    font-size: 4rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+#countdown {
+    font-size: 5rem;
+    font-family: monospace;
+    font-weight: 700;
+}
+
+/* Footer & Controls */
+footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+button {
+    background: var(--highlight-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: var(--active-bg);
+    border-color: var(--accent-color);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--highlight-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    border: 1px solid var(--text-secondary);
+}
+
+.modal-content h2 {
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    background: var(--bg-color);
+    border: 1px solid var(--text-secondary);
+    color: white;
+    border-radius: 5px;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+    }
+    .next-prayer-container {
+        width: 100%;
+        padding: 1rem;
+    }
+    #clock { font-size: 3rem; }
+    .prayer-item { font-size: 1.5rem; }
+}
