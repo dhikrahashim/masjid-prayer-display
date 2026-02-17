@@ -50,11 +50,13 @@ const tickerInput = document.getElementById('ticker-text');
 const audioBtn = document.getElementById('audio-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const azanAudio = document.getElementById('azan-audio');
+const duaOverlay = document.getElementById('dua-overlay');
 
 // Initialization
 function init() {
     updateClock();
     setInterval(updateClock, 1000);
+    // Explicitly set ticker to avoid blinking hardcoded text if any (though we removed it)
     tickerContentEl.textContent = tickerText;
 
     // Initial load setup
